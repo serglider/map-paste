@@ -1,11 +1,11 @@
 {
     "name": "map-paste",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Flow Launcher plugin to search Google Maps from pasted text.",
     "main": "main.js",
     "private": true,
     "engines": {
-        "node": ">=20"
+        "node": ">=24"
     },
     "scripts": {
         "format": "prettier --write .",
