@@ -26,14 +26,13 @@ if ($version -ne $pluginVersion) {
 
 $releaseRoot = Join-Path $projectRoot "release"
 $stagingRoot = Join-Path $releaseRoot "staging"
-$stagingPluginFolder = Join-Path $stagingRoot "map-paste"
 $zipPath = Join-Path $releaseRoot "map-paste-v$version.zip"
 
 if (Test-Path $releaseRoot) {
     Remove-Item $releaseRoot -Recurse -Force
 }
 
-New-Item -ItemType Directory -Force -Path $stagingPluginFolder | Out-Null
+New-Item -ItemType Directory -Force -Path $stagingRoot | Out-Null
 
 $includeItems = @(
     "plugin.json",
@@ -51,14 +50,14 @@ foreach ($item in $includeItems) {
     $sourcePath = Join-Path $projectRoot $item
 
     if (Test-Path $sourcePath) {
-        Copy-Item $sourcePath $stagingPluginFolder -Recurse -Force
+        Copy-Item $sourcePath $stagingRoot -Recurse -Force
     }
     else {
         Write-Host "Skipping missing optional item: $item"
     }
 }
 
-Compress-Archive -Path $stagingPluginFolder -DestinationPath $zipPath -Force
+Compress-Archive -Path (Join-Path $stagingRoot "*") -DestinationPath $zipPath -Force
 
 Write-Host "Created release package:"
 Write-Host $zipPath

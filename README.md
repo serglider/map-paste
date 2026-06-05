@@ -75,9 +75,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package-release.ps1
 ### Manual Release Installation
 
 1. Download `map-paste-vX.Y.Z.zip` from GitHub Releases.
-2. Extract the `map-paste` folder into `%APPDATA%\FlowLauncher\Plugins`.
-3. Restart Flow Launcher.
-4. Type `mp coffee near Barcelona`.
+2. Extract it into a plugin folder under `%APPDATA%\FlowLauncher\Plugins`, for example `%APPDATA%\FlowLauncher\Plugins\map-paste`.
+3. Confirm `plugin.json` is directly inside that folder.
+4. Restart Flow Launcher.
+5. Type `mp coffee near Barcelona`.
 
 ## Release Automation
 

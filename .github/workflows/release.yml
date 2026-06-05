@@ -110,14 +110,14 @@ jobs:
                       $entries = $zip.Entries.FullName | ForEach-Object { $_ -replace "\\", "/" }
 
                       $requiredEntries = @(
-                          "map-paste/plugin.json",
-                          "map-paste/main.js",
-                          "map-paste/src/constants.js",
-                          "map-paste/Images/app.png",
-                          "map-paste/SettingsTemplate.yaml",
-                          "map-paste/README.md",
-                          "map-paste/LICENSE",
-                          "map-paste/package.json"
+                          "plugin.json",
+                          "main.js",
+                          "src/constants.js",
+                          "Images/app.png",
+                          "SettingsTemplate.yaml",
+                          "README.md",
+                          "LICENSE",
+                          "package.json"
                       )
 
                       foreach ($entry in $requiredEntries) {
@@ -127,10 +127,10 @@ jobs:
                       }
 
                       $forbiddenPatterns = @(
-                          "^map-paste/\.git/",
-                          "^map-paste/node_modules/",
-                          "^map-paste/test/",
-                          "^map-paste/scripts/"
+                          "^\.git/",
+                          "^node_modules/",
+                          "^test/",
+                          "^scripts/"
                       )
 
                       foreach ($pattern in $forbiddenPatterns) {
@@ -168,9 +168,10 @@ jobs:
                   ### Manual installation
 
                   1. Download `map-paste-{TAG}.zip`.
-                  2. Extract the `map-paste` folder into `%APPDATA%\FlowLauncher\Plugins`.
-                  3. Restart Flow Launcher.
-                  4. Type `mp coffee near Barcelona`.
+                  2. Extract it into a plugin folder under `%APPDATA%\FlowLauncher\Plugins`, for example `%APPDATA%\FlowLauncher\Plugins\map-paste`.
+                  3. Confirm `plugin.json` is directly inside that folder.
+                  4. Restart Flow Launcher.
+                  5. Type `mp coffee near Barcelona`.
                   '@
 
                   $releaseNotes.Replace("{TAG}", $tagName) | Set-Content -Path release-notes.md -Encoding utf8
