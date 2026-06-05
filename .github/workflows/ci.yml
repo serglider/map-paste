@@ -60,14 +60,14 @@ jobs:
                       $entries = $zip.Entries.FullName | ForEach-Object { $_ -replace "\\", "/" }
 
                       $requiredEntries = @(
-                          "map-paste/plugin.json",
-                          "map-paste/main.js",
-                          "map-paste/src/constants.js",
-                          "map-paste/Images/app.png",
-                          "map-paste/SettingsTemplate.yaml",
-                          "map-paste/README.md",
-                          "map-paste/LICENSE",
-                          "map-paste/package.json"
+                          "plugin.json",
+                          "main.js",
+                          "src/constants.js",
+                          "Images/app.png",
+                          "SettingsTemplate.yaml",
+                          "README.md",
+                          "LICENSE",
+                          "package.json"
                       )
 
                       foreach ($entry in $requiredEntries) {
@@ -77,10 +77,10 @@ jobs:
                       }
 
                       $forbiddenPatterns = @(
-                          "^map-paste/\.git/",
-                          "^map-paste/node_modules/",
-                          "^map-paste/test/",
-                          "^map-paste/scripts/"
+                          "^\.git/",
+                          "^node_modules/",
+                          "^test/",
+                          "^scripts/"
                       )
 
                       foreach ($pattern in $forbiddenPatterns) {

@@ -60,10 +60,10 @@ Current useful values after the release workflow publishes the latest version:
     "Name": "MapPaste",
     "Description": "Search Google Maps from pasted text",
     "Author": "Sergey Chernykh",
-    "Version": "0.1.3",
+    "Version": "0.1.4",
     "Language": "javascript",
     "Website": "https://github.com/serglider/map-paste",
-    "UrlDownload": "https://github.com/serglider/map-paste/releases/download/v0.1.3/map-paste-v0.1.3.zip",
+    "UrlDownload": "https://github.com/serglider/map-paste/releases/download/v0.1.4/map-paste-v0.1.4.zip",
     "UrlSourceCode": "https://github.com/serglider/map-paste",
     "IcoPath": "https://cdn.jsdelivr.net/gh/serglider/map-paste@master/Images/app.png"
 }
@@ -77,12 +77,12 @@ Do not add category or keyword fields unless the current Flow Launcher PluginsMa
 - `npm run format:check` passes.
 - Manual Flow Launcher install works.
 - Query `mp coffee near Barcelona` opens Google Maps.
-- Release zip contains `plugin.json` inside the `map-paste` plugin folder.
+- Release zip contains `plugin.json` at the archive root, directly inside the extracted plugin folder.
 - Release zip does not contain `node_modules`.
 
 ## Submission timing
 
-Submit to the official Flow Launcher PluginsManifest after the protected `master` merge creates the latest GitHub Release. At the time these notes were prepared, `dev` contains the `0.1.3` release candidate and PR #1 is expected to trigger the `v0.1.3` release after merge.
+Submit to the official Flow Launcher PluginsManifest after the protected `master` merge creates the latest GitHub Release. At the time these notes were prepared, `dev` contains the `0.1.4` release candidate and the release package layout fix is expected to trigger the `v0.1.4` release after merge.
 
 ## Current submission process to verify before PR
 
