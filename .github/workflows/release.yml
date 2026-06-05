@@ -1,15 +1,9 @@
 name: Release
 
 on:
-    workflow_dispatch:
-        inputs:
-            version:
-                description: Version to release without the leading v. Defaults to package.json version.
-                required: false
-                type: string
     push:
-        tags:
-            - v*
+        branches:
+            - master
 
 permissions:
     contents: write
@@ -25,85 +19,80 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: Check release intent
+              id: version
+              shell: pwsh
+              run: |
+                  $ErrorActionPreference = "Stop"
+
+                  $beforeSha = "${{ github.event.before }}"
+                  $currentPackageJson = Get-Content "package.json" -Raw | ConvertFrom-Json
+                  $currentPluginJson = Get-Content "plugin.json" -Raw | ConvertFrom-Json
+                  $currentVersion = $currentPackageJson.version
+                  $pluginVersion = $currentPluginJson.Version
+                  $previousVersion = ""
+
+                  if ($currentVersion -ne $pluginVersion) {
+                      throw "Version mismatch: package.json has $currentVersion but plugin.json has $pluginVersion"
+                  }
+
+                  if (-not [string]::IsNullOrWhiteSpace($beforeSha) -and $beforeSha -notmatch "^0+$") {
+                      $previousPackageJson = git show "${beforeSha}:package.json" 2>$null
+
+                      if ($LASTEXITCODE -eq 0 -and $previousPackageJson) {
+                          $previousVersion = ($previousPackageJson | Out-String | ConvertFrom-Json).version
+                      }
+                  }
+
+                  if ($previousVersion -eq $currentVersion) {
+                      Write-Host "package.json version did not change. No release will be created."
+                      "should_release=false" >> $env:GITHUB_OUTPUT
+                      "release_version=$currentVersion" >> $env:GITHUB_OUTPUT
+                      "tag_name=v$currentVersion" >> $env:GITHUB_OUTPUT
+                      "zip_path=release/map-paste-v$currentVersion.zip" >> $env:GITHUB_OUTPUT
+                      exit 0
+                  }
+
+                  $tagName = "v$currentVersion"
+                  $existingTag = git ls-remote --tags origin $tagName
+
+                  if ($existingTag) {
+                      throw "Release tag already exists: $tagName"
+                  }
+
+                  Write-Host "Detected release version change: $previousVersion -> $currentVersion"
+
+                  "should_release=true" >> $env:GITHUB_OUTPUT
+                  "release_version=$currentVersion" >> $env:GITHUB_OUTPUT
+                  "tag_name=$tagName" >> $env:GITHUB_OUTPUT
+                  "zip_path=release/map-paste-v$currentVersion.zip" >> $env:GITHUB_OUTPUT
+
             - name: Set up Node.js
+              if: steps.version.outputs.should_release == 'true'
               uses: actions/setup-node@v4
               with:
                   node-version: 20
                   cache: npm
 
             - name: Install dependencies
+              if: steps.version.outputs.should_release == 'true'
               run: npm ci
 
             - name: Run tests
+              if: steps.version.outputs.should_release == 'true'
               run: npm test
 
             - name: Check formatting
+              if: steps.version.outputs.should_release == 'true'
               run: npm run format:check
 
-            - name: Validate release version
-              id: version
-              shell: pwsh
-              run: |
-                  $ErrorActionPreference = "Stop"
-
-                  $packageVersion = node -p "require('./package.json').version"
-                  $pluginVersion = node -p "require('./plugin.json').Version"
-
-                  if ($packageVersion -ne $pluginVersion) {
-                      throw "Version mismatch: package.json has $packageVersion but plugin.json has $pluginVersion"
-                  }
-
-                  if ($env:GITHUB_EVENT_NAME -eq "push") {
-                      $tagName = $env:GITHUB_REF_NAME
-
-                      if (-not $tagName.StartsWith("v")) {
-                          throw "Release tag must start with v. Current tag: $tagName"
-                      }
-
-                      git fetch origin master
-
-                      if ($LASTEXITCODE -ne 0) {
-                          throw "Failed to fetch origin/master"
-                      }
-
-                      $containingBranches = git branch -r --contains HEAD
-
-                      if (-not ($containingBranches | Where-Object { $_.Trim() -eq "origin/master" })) {
-                          throw "Release tags must point to a commit contained in origin/master"
-                      }
-
-                      $releaseVersion = $tagName.Substring(1)
-                  }
-                  else {
-                      if ($env:GITHUB_REF_NAME -ne "master") {
-                          throw "Manual releases must run from master. Current ref is $env:GITHUB_REF_NAME"
-                      }
-
-                      $inputVersion = "${{ github.event.inputs.version }}"
-
-                      if ([string]::IsNullOrWhiteSpace($inputVersion)) {
-                          $releaseVersion = $packageVersion
-                      }
-                      else {
-                          $releaseVersion = $inputVersion.TrimStart("v")
-                      }
-
-                      $tagName = "v$releaseVersion"
-                  }
-
-                  if ($releaseVersion -ne $packageVersion) {
-                      throw "Release version $releaseVersion does not match package.json version $packageVersion"
-                  }
-
-                  "release_version=$releaseVersion" >> $env:GITHUB_OUTPUT
-                  "tag_name=$tagName" >> $env:GITHUB_OUTPUT
-                  "zip_path=release/map-paste-v$releaseVersion.zip" >> $env:GITHUB_OUTPUT
-
             - name: Build release package
+              if: steps.version.outputs.should_release == 'true'
               shell: pwsh
               run: ./scripts/package-release.ps1
 
             - name: Verify release package
+              if: steps.version.outputs.should_release == 'true'
               shell: pwsh
               run: |
                   $ErrorActionPreference = "Stop"
@@ -155,6 +144,7 @@ jobs:
                   }
 
             - name: Write release notes
+              if: steps.version.outputs.should_release == 'true'
               shell: pwsh
               run: |
                   $ErrorActionPreference = "Stop"
@@ -186,6 +176,7 @@ jobs:
                   $releaseNotes.Replace("{TAG}", $tagName) | Set-Content -Path release-notes.md -Encoding utf8
 
             - name: Publish release
+              if: steps.version.outputs.should_release == 'true'
               shell: pwsh
               env:
                   GH_TOKEN: ${{ github.token }}
@@ -205,24 +196,11 @@ jobs:
                       throw "GitHub release already exists for $tagName"
                   }
 
-                  $releaseArgs = @(
-                      "release",
-                      "create",
-                      $tagName,
-                      $zipPath,
-                      "--repo",
-                      $env:GITHUB_REPOSITORY,
-                      "--title",
-                      "MapPaste $tagName",
-                      "--notes-file",
-                      "release-notes.md"
-                  )
-
-                  if ($env:GITHUB_EVENT_NAME -eq "workflow_dispatch") {
-                      $releaseArgs += @("--target", $env:GITHUB_SHA)
-                  }
-
-                  & gh @releaseArgs
+                  & gh release create $tagName $zipPath `
+                      --repo $env:GITHUB_REPOSITORY `
+                      --target $env:GITHUB_SHA `
+                      --title "MapPaste $tagName" `
+                      --notes-file release-notes.md
 
                   if ($LASTEXITCODE -ne 0) {
                       throw "gh release create failed for $tagName"

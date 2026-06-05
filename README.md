@@ -81,13 +81,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package-release.ps1
 
 ## Release Automation
 
-Pull requests and pushes to `dev` or `master` run CI only. CI installs dependencies, runs tests,
-checks formatting, and verifies the release package structure with read-only repository
-permissions.
+Pull requests and pushes to `dev` or `master` run CI. CI installs dependencies, runs tests, checks
+formatting, and verifies the release package structure with read-only repository permissions.
 
-GitHub Releases are created only by the `Release` workflow. Run it manually from `master`, or push a
-version tag such as `v0.1.2`. The workflow checks that the tag version, `package.json`, and
-`plugin.json` all match before it publishes a release asset.
+GitHub Releases are created by the `Release` workflow after a protected `master` update changes
+`package.json` version. The workflow checks that `package.json` and `plugin.json` versions match,
+then creates tag `vX.Y.Z`, publishes release `MapPaste vX.Y.Z`, and uploads
+`map-paste-vX.Y.Z.zip`.
 
 ## Google Maps URLs
 
