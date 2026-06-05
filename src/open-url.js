@@ -1,7 +1,7 @@
 const { spawn } = require('child_process');
 
-function openUrlOnWindows(url) {
-    const child = spawn('rundll32.exe', ['url.dll,FileProtocolHandler', url], {
+function spawnDetached(command, args) {
+    const child = spawn(command, args, {
         detached: true,
         stdio: 'ignore',
         windowsHide: true,
@@ -10,22 +10,22 @@ function openUrlOnWindows(url) {
     child.unref();
 }
 
-async function openUrlWithOpenPackage(url) {
-    const { default: open } = await import('open');
-    await open(url);
-}
-
 async function openUrl(url) {
     if (!url || typeof url !== 'string') {
         throw new Error('URL is required');
     }
 
     if (process.platform === 'win32') {
-        openUrlOnWindows(url);
+        spawnDetached('rundll32.exe', ['url.dll,FileProtocolHandler', url]);
         return;
     }
 
-    await openUrlWithOpenPackage(url);
+    if (process.platform === 'darwin') {
+        spawnDetached('open', [url]);
+        return;
+    }
+
+    spawnDetached('xdg-open', [url]);
 }
 
 module.exports = { openUrl };

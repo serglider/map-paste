@@ -4,9 +4,9 @@
     "Name": "MapPaste",
     "Description": "Search Google Maps from pasted text",
     "Author": "Sergey Chernykh",
-    "Version": "0.1.0",
+    "Version": "0.1.1",
     "Language": "javascript",
-    "Website": "https://github.com/chernyh39157/map-paste",
+    "Website": "https://github.com/serglider/map-paste",
     "ExecuteFileName": "main.js",
     "IcoPath": "Images\\app.png"
 }
