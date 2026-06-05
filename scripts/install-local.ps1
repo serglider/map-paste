@@ -1,6 +1,5 @@
 $ErrorActionPreference = "Stop"
 
-$pluginFolderName = "map-paste"
 $flowPluginFolderName = "map-paste"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -35,7 +34,8 @@ $excludeDirs = @(
     ".git",
     ".idea",
     ".vscode",
-    "coverage"
+    "coverage",
+    "node_modules"
 )
 
 $excludeFiles = @(
@@ -62,7 +62,7 @@ Write-Host ""
 Write-Host "Installed successfully."
 Write-Host ""
 Write-Host "Next steps:"
-Write-Host "1. Restart Flow Launcher."
+Write-Host "1. Restart Flow Launcher if plugin.json changed."
 Write-Host "2. Type: mp coffee near Barcelona"
 Write-Host ""
 Write-Host "Installed files:"

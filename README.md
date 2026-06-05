@@ -27,13 +27,21 @@ MapPaste requires Node.js 20 or newer.
 
 Copy or install the plugin into Flow Launcher's plugins folder and restart Flow Launcher.
 
-For local development, the folder should be placed at:
+For local development, run:
 
-```text
-%APPDATA%\FlowLauncher\Plugins\Flow.Launcher.Plugin.MapPaste
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-local.ps1
 ```
 
-Then install development dependencies:
+This installs the plugin into:
+
+```text
+%APPDATA%\FlowLauncher\Plugins\map-paste
+```
+
+Restart Flow Launcher after manifest changes such as edits to `plugin.json`.
+
+To install development dependencies:
 
 ```bash
 npm install
