@@ -66,6 +66,19 @@ node .\main.js '{"method":"query","parameters":["coffee near Barcelona"],"settin
 The release package does not include `node_modules` because MapPaste has no runtime npm
 dependencies.
 
+To create a release package:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\package-release.ps1
+```
+
+### Manual Release Installation
+
+1. Download `map-paste-vX.Y.Z.zip` from GitHub Releases.
+2. Extract the `map-paste` folder into `%APPDATA%\FlowLauncher\Plugins`.
+3. Restart Flow Launcher.
+4. Type `mp coffee near Barcelona`.
+
 ## Google Maps URLs
 
 MapPaste uses normal Google Maps search URLs:
