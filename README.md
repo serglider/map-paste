@@ -51,8 +51,15 @@ npm run format
 
 To simulate a Flow Launcher query locally:
 
-```bash
-node main.js "{\"method\":\"query\",\"parameters\":[\"coffee near Barcelona\"],\"settings\":{}}"
+```powershell
+cd C:\Users\s-che\Projects\map-paste
+node .\main.js '{"method":"query","parameters":["coffee near Barcelona"],"settings":{}}'
+```
+
+If you are in another directory, pass the full path to `main.js`:
+
+```powershell
+node C:\Users\s-che\Projects\map-paste\main.js '{"method":"query","parameters":["coffee near Barcelona"],"settings":{}}'
 ```
 
 ## Google Maps URLs
