@@ -1,7 +1,14 @@
 const { normalizeQuery } = require('./query');
 
+const TRUE_SETTING_VALUES = new Set(['true', '1', 'yes', 'on']);
+const FALSE_SETTING_VALUES = new Set(['false', '0', 'no', 'off']);
+
+function hasSetting(settings, name) {
+    return Boolean(settings && Object.prototype.hasOwnProperty.call(settings, name));
+}
+
 function getBooleanSetting(settings, name, defaultValue) {
-    if (!settings || !Object.prototype.hasOwnProperty.call(settings, name)) {
+    if (!hasSetting(settings, name)) {
         return defaultValue;
     }
 
@@ -14,11 +21,11 @@ function getBooleanSetting(settings, name, defaultValue) {
     if (typeof value === 'string') {
         const normalizedValue = value.trim().toLowerCase();
 
-        if (['true', '1', 'yes', 'on'].includes(normalizedValue)) {
+        if (TRUE_SETTING_VALUES.has(normalizedValue)) {
             return true;
         }
 
-        if (['false', '0', 'no', 'off'].includes(normalizedValue)) {
+        if (FALSE_SETTING_VALUES.has(normalizedValue)) {
             return false;
         }
     }
@@ -27,7 +34,7 @@ function getBooleanSetting(settings, name, defaultValue) {
 }
 
 function getStringSetting(settings, name, defaultValue) {
-    if (!settings || !Object.prototype.hasOwnProperty.call(settings, name)) {
+    if (!hasSetting(settings, name)) {
         return defaultValue;
     }
 
