@@ -17,7 +17,7 @@ permissions:
 jobs:
     release:
         name: Publish GitHub Release
-        runs-on: windows-latest
+        runs-on: ubuntu-latest
 
         steps:
             - name: Check out repository
