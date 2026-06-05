@@ -1,0 +1,21 @@
+body:
+    - type: checkbox
+      attributes:
+          name: appendDefaultLocation
+          label: Append default location
+          description: Append the default location to searches when it is not already present.
+          defaultValue: false
+
+    - type: input
+      attributes:
+          name: defaultLocation
+          label: Default location
+          description: 'Example: Barcelona. Used only when "Append default location" is enabled.'
+          defaultValue: ''
+
+    - type: input
+      attributes:
+          name: appNameForUtm
+          label: App name for URL attribution
+          description: Used as the utm_source value in generated Google Maps URLs.
+          defaultValue: 'map-paste'

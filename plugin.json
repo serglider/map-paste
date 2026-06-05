@@ -1,0 +1,12 @@
+{
+    "ID": "3361362c-97e0-46f3-9461-31d24975f0a9",
+    "ActionKeyword": "mp",
+    "Name": "MapPaste",
+    "Description": "Search Google Maps from pasted text",
+    "Author": "Sergey Chernykh",
+    "Version": "0.1.0",
+    "Language": "javascript",
+    "Website": "https://github.com/chernyh39157/map-paste",
+    "ExecuteFileName": "main.js",
+    "IcoPath": "Images\\app.png"
+}

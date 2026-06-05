@@ -1,0 +1,31 @@
+{
+    "name": "map-paste",
+    "version": "0.1.0",
+    "description": "Flow Launcher plugin to search Google Maps from pasted text.",
+    "main": "main.js",
+    "private": true,
+    "engines": {
+        "node": ">=20"
+    },
+    "scripts": {
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "test": "node --test"
+    },
+    "dependencies": {
+        "open": "^11.0.0"
+    },
+    "devDependencies": {
+        "prettier": "^3.8.3"
+    },
+    "prettier": {
+        "printWidth": 100,
+        "tabWidth": 4,
+        "semi": true,
+        "singleQuote": true,
+        "trailingComma": "all",
+        "bracketSpacing": true,
+        "arrowParens": "always",
+        "endOfLine": "lf"
+    }
+}
