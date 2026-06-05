@@ -79,6 +79,16 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package-release.ps1
 3. Restart Flow Launcher.
 4. Type `mp coffee near Barcelona`.
 
+## Release Automation
+
+Pull requests and pushes to `dev` or `master` run CI only. CI installs dependencies, runs tests,
+checks formatting, and verifies the release package structure with read-only repository
+permissions.
+
+GitHub Releases are created only by the `Release` workflow. Run it manually from `master`, or push a
+version tag such as `v0.1.2`. The workflow checks that the tag version, `package.json`, and
+`plugin.json` all match before it publishes a release asset.
+
 ## Google Maps URLs
 
 MapPaste uses normal Google Maps search URLs:

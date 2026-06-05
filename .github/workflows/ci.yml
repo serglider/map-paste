@@ -1,0 +1,94 @@
+name: CI
+
+on:
+    push:
+        branches:
+            - dev
+            - master
+    pull_request:
+        branches:
+            - dev
+            - master
+
+permissions:
+    contents: read
+
+jobs:
+    validate:
+        name: Validate
+        runs-on: windows-latest
+
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run tests
+              run: npm test
+
+            - name: Check formatting
+              run: npm run format:check
+
+            - name: Build release package
+              shell: pwsh
+              run: ./scripts/package-release.ps1
+
+            - name: Verify release package
+              shell: pwsh
+              run: |
+                  $ErrorActionPreference = "Stop"
+
+                  $packageVersion = node -p "require('./package.json').version"
+                  $zipPath = "release/map-paste-v$packageVersion.zip"
+
+                  if (-not (Test-Path $zipPath)) {
+                      throw "Release zip was not created: $zipPath"
+                  }
+
+                  Add-Type -AssemblyName System.IO.Compression.FileSystem
+                  $zip = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $zipPath))
+
+                  try {
+                      $entries = $zip.Entries.FullName | ForEach-Object { $_ -replace "\\", "/" }
+
+                      $requiredEntries = @(
+                          "map-paste/plugin.json",
+                          "map-paste/main.js",
+                          "map-paste/src/constants.js",
+                          "map-paste/Images/app.png",
+                          "map-paste/SettingsTemplate.yaml",
+                          "map-paste/README.md",
+                          "map-paste/LICENSE",
+                          "map-paste/package.json"
+                      )
+
+                      foreach ($entry in $requiredEntries) {
+                          if ($entries -notcontains $entry) {
+                              throw "Release zip is missing required entry: $entry"
+                          }
+                      }
+
+                      $forbiddenPatterns = @(
+                          "^map-paste/\.git/",
+                          "^map-paste/node_modules/",
+                          "^map-paste/test/",
+                          "^map-paste/scripts/"
+                      )
+
+                      foreach ($pattern in $forbiddenPatterns) {
+                          if ($entries | Where-Object { $_ -match $pattern }) {
+                              throw "Release zip contains forbidden entry matching: $pattern"
+                          }
+                      }
+                  }
+                  finally {
+                      $zip.Dispose()
+                  }

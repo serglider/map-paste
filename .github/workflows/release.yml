@@ -1,0 +1,229 @@
+name: Release
+
+on:
+    workflow_dispatch:
+        inputs:
+            version:
+                description: Version to release without the leading v. Defaults to package.json version.
+                required: false
+                type: string
+    push:
+        tags:
+            - v*
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        name: Publish GitHub Release
+        runs-on: windows-latest
+
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run tests
+              run: npm test
+
+            - name: Check formatting
+              run: npm run format:check
+
+            - name: Validate release version
+              id: version
+              shell: pwsh
+              run: |
+                  $ErrorActionPreference = "Stop"
+
+                  $packageVersion = node -p "require('./package.json').version"
+                  $pluginVersion = node -p "require('./plugin.json').Version"
+
+                  if ($packageVersion -ne $pluginVersion) {
+                      throw "Version mismatch: package.json has $packageVersion but plugin.json has $pluginVersion"
+                  }
+
+                  if ($env:GITHUB_EVENT_NAME -eq "push") {
+                      $tagName = $env:GITHUB_REF_NAME
+
+                      if (-not $tagName.StartsWith("v")) {
+                          throw "Release tag must start with v. Current tag: $tagName"
+                      }
+
+                      git fetch origin master
+
+                      if ($LASTEXITCODE -ne 0) {
+                          throw "Failed to fetch origin/master"
+                      }
+
+                      $containingBranches = git branch -r --contains HEAD
+
+                      if (-not ($containingBranches | Where-Object { $_.Trim() -eq "origin/master" })) {
+                          throw "Release tags must point to a commit contained in origin/master"
+                      }
+
+                      $releaseVersion = $tagName.Substring(1)
+                  }
+                  else {
+                      if ($env:GITHUB_REF_NAME -ne "master") {
+                          throw "Manual releases must run from master. Current ref is $env:GITHUB_REF_NAME"
+                      }
+
+                      $inputVersion = "${{ github.event.inputs.version }}"
+
+                      if ([string]::IsNullOrWhiteSpace($inputVersion)) {
+                          $releaseVersion = $packageVersion
+                      }
+                      else {
+                          $releaseVersion = $inputVersion.TrimStart("v")
+                      }
+
+                      $tagName = "v$releaseVersion"
+                  }
+
+                  if ($releaseVersion -ne $packageVersion) {
+                      throw "Release version $releaseVersion does not match package.json version $packageVersion"
+                  }
+
+                  "release_version=$releaseVersion" >> $env:GITHUB_OUTPUT
+                  "tag_name=$tagName" >> $env:GITHUB_OUTPUT
+                  "zip_path=release/map-paste-v$releaseVersion.zip" >> $env:GITHUB_OUTPUT
+
+            - name: Build release package
+              shell: pwsh
+              run: ./scripts/package-release.ps1
+
+            - name: Verify release package
+              shell: pwsh
+              run: |
+                  $ErrorActionPreference = "Stop"
+
+                  $zipPath = "${{ steps.version.outputs.zip_path }}"
+
+                  if (-not (Test-Path $zipPath)) {
+                      throw "Release zip was not created: $zipPath"
+                  }
+
+                  Add-Type -AssemblyName System.IO.Compression.FileSystem
+                  $zip = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $zipPath))
+
+                  try {
+                      $entries = $zip.Entries.FullName | ForEach-Object { $_ -replace "\\", "/" }
+
+                      $requiredEntries = @(
+                          "map-paste/plugin.json",
+                          "map-paste/main.js",
+                          "map-paste/src/constants.js",
+                          "map-paste/Images/app.png",
+                          "map-paste/SettingsTemplate.yaml",
+                          "map-paste/README.md",
+                          "map-paste/LICENSE",
+                          "map-paste/package.json"
+                      )
+
+                      foreach ($entry in $requiredEntries) {
+                          if ($entries -notcontains $entry) {
+                              throw "Release zip is missing required entry: $entry"
+                          }
+                      }
+
+                      $forbiddenPatterns = @(
+                          "^map-paste/\.git/",
+                          "^map-paste/node_modules/",
+                          "^map-paste/test/",
+                          "^map-paste/scripts/"
+                      )
+
+                      foreach ($pattern in $forbiddenPatterns) {
+                          if ($entries | Where-Object { $_ -match $pattern }) {
+                              throw "Release zip contains forbidden entry matching: $pattern"
+                          }
+                      }
+                  }
+                  finally {
+                      $zip.Dispose()
+                  }
+
+            - name: Write release notes
+              shell: pwsh
+              run: |
+                  $ErrorActionPreference = "Stop"
+
+                  $tagName = "${{ steps.version.outputs.tag_name }}"
+
+                  $releaseNotes = @'
+                  ## MapPaste {TAG}
+
+                  MapPaste release {TAG}.
+
+                  ### Features
+
+                  - Search Google Maps from pasted text using the `mp` Flow Launcher keyword.
+                  - Opens Google Maps in the default browser.
+                  - Supports optional default location setting.
+                  - Uses Google Maps URLs only.
+                  - No Google Maps API key required.
+                  - No backend and no telemetry.
+
+                  ### Manual installation
+
+                  1. Download `map-paste-{TAG}.zip`.
+                  2. Extract the `map-paste` folder into `%APPDATA%\FlowLauncher\Plugins`.
+                  3. Restart Flow Launcher.
+                  4. Type `mp coffee near Barcelona`.
+                  '@
+
+                  $releaseNotes.Replace("{TAG}", $tagName) | Set-Content -Path release-notes.md -Encoding utf8
+
+            - name: Publish release
+              shell: pwsh
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  $ErrorActionPreference = "Stop"
+
+                  $tagName = "${{ steps.version.outputs.tag_name }}"
+                  $zipPath = "${{ steps.version.outputs.zip_path }}"
+
+                  if (Get-Variable PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue) {
+                      $PSNativeCommandUseErrorActionPreference = $false
+                  }
+
+                  gh release view $tagName --repo $env:GITHUB_REPOSITORY *> $null
+
+                  if ($LASTEXITCODE -eq 0) {
+                      throw "GitHub release already exists for $tagName"
+                  }
+
+                  $releaseArgs = @(
+                      "release",
+                      "create",
+                      $tagName,
+                      $zipPath,
+                      "--repo",
+                      $env:GITHUB_REPOSITORY,
+                      "--title",
+                      "MapPaste $tagName",
+                      "--notes-file",
+                      "release-notes.md"
+                  )
+
+                  if ($env:GITHUB_EVENT_NAME -eq "workflow_dispatch") {
+                      $releaseArgs += @("--target", $env:GITHUB_SHA)
+                  }
+
+                  & gh @releaseArgs
+
+                  if ($LASTEXITCODE -ne 0) {
+                      throw "gh release create failed for $tagName"
+                  }
