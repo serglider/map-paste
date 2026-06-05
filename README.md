@@ -21,10 +21,10 @@ search URL in your default browser.
 
 ## Settings
 
-- **Append default location**: Adds the default location to searches when it is not
-  already present.
-- **Default location**: The location to append, for example `Barcelona`.
-- **App name for URL attribution**: Used as the `utm_source` value in generated URLs.
+-   **Append default location**: Adds the default location to searches when it is not
+    already present.
+-   **Default location**: The location to append, for example `Barcelona`.
+-   **App name for URL attribution**: Used as the `utm_source` value in generated URLs.
 
 ## Local Installation
 

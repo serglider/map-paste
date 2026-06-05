@@ -1,4 +1,3 @@
-const { PLUGIN_SLUG } = require('./constants');
 const { normalizeQuery } = require('./query');
 
 function getBooleanSetting(settings, name, defaultValue) {
