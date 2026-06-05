@@ -7,8 +7,8 @@ A Flow Launcher plugin that opens pasted text as a Google Maps search.
 Open Flow Launcher and type:
 
 ```text
-mp coffee near Barcelona
-mp flower shop near Carrer del Camp 69 Barcelona
+mp coffee near me
+mp flower shop near me
 mp Park Güell
 ```
 
@@ -18,7 +18,7 @@ search URL in your default browser.
 ## Settings
 
 - **Append default location**: Adds the default location to searches when it is not already present.
-- **Default location**: The location to append, for example `Barcelona`.
+- **Default location**: The location to append, for example `Paris`.
 - **App name for URL attribution**: Used as the `utm_source` value in generated URLs.
 
 ## Local Installation
